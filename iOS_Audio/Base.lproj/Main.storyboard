@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="10116" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="BYZ-38-t0r">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
+                        <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="zBX-0W-Aeh">
+                                <rect key="frame" x="185" y="285" width="49" height="30"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                <state key="normal" title="Record"/>
+                                <connections>
+                                    <action selector="pressRecord:" destination="BYZ-38-t0r" eventType="touchUpInside" id="GNk-tp-4u5"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="D3w-XL-B3d">
+                                <rect key="frame" x="366" y="285" width="30" height="30"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                <state key="normal" title="Play"/>
+                                <connections>
+                                    <action selector="pressPlay:" destination="BYZ-38-t0r" eventType="touchUpInside" id="tLj-y6-yjM"/>
+                                </connections>
+                            </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="init" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Sh5-bH-aAZ">
+                                <rect key="frame" x="289" y="214" width="23" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="PA4-81-PgT">
+                                <rect key="frame" x="284" y="285" width="32" height="30"/>
+                                <state key="normal" title="Stop"/>
+                                <connections>
+                                    <action selector="pressStop:" destination="BYZ-38-t0r" eventType="touchUpInside" id="K10-Gm-6R8"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="D3w-XL-B3d" firstAttribute="leading" secondItem="PA4-81-PgT" secondAttribute="trailing" constant="50" id="7Ub-Xs-QQH"/>
+                            <constraint firstItem="Sh5-bH-aAZ" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="Dys-Kr-hog"/>
+                            <constraint firstItem="PA4-81-PgT" firstAttribute="top" secondItem="Sh5-bH-aAZ" secondAttribute="bottom" constant="50" id="GjU-v3-SsD"/>
+                            <constraint firstItem="PA4-81-PgT" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="MRN-rt-J3F"/>
+                            <constraint firstItem="zBX-0W-Aeh" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="bki-OP-5xU"/>
+                            <constraint firstItem="D3w-XL-B3d" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="quY-dF-qfz"/>
+                            <constraint firstItem="PA4-81-PgT" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="vh4-b4-Xu6"/>
+                            <constraint firstItem="PA4-81-PgT" firstAttribute="leading" secondItem="zBX-0W-Aeh" secondAttribute="trailing" constant="50" id="zld-i7-8td"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="labelState" destination="Sh5-bH-aAZ" id="2Nl-aY-j9b"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="267" y="418"/>
+        </scene>
+    </scenes>
+</document>
