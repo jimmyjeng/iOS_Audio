@@ -7,6 +7,7 @@
 //
 
 #import "ViewController.h"
+#import <AudioToolbox/audioconverter.h>
 
 @interface ViewController ()
 
@@ -32,56 +33,63 @@
 
 }
 
-static void HandleInputBuffer (void                                *aqData,
+static void HandleInputBuffer (
+                               void                                *aqData,
                                AudioQueueRef                       inAQ,
                                AudioQueueBufferRef                 inBuffer,
                                const AudioTimeStamp                *inStartTime,
                                UInt32                              inNumPackets,
-                               const AudioStreamPacketDescription  *inPacketDesc)
+                               const AudioStreamPacketDescription  *inPacketDesc
+                               )
 {
 
-    AQRecorderState *recordState = (AQRecorderState*)aqData;
-    if (!recordState->mIsRunning)
+    AQRecorderState *pAqData = (AQRecorderState *) aqData;
+
+    if (inNumPackets == 0 && pAqData->mDataFormat.mBytesPerPacket != 0)
     {
-        NSLog(@"Not recording, returning\n");
+        inNumPackets = inBuffer->mAudioDataByteSize / pAqData->mDataFormat.mBytesPerPacket;
     }
 
-    // if (inNumberPacketDescriptions == 0 && recordState->dataFormat.mBytesPerPacket != 0)
-    // {
-    //     inNumberPacketDescriptions = inBuffer->mAudioDataByteSize / recordState->dataFormat.mBytesPerPacket;
-    // }
+    NSLog(@"Writing buffer %lld", pAqData->mCurrentPacket);
 
-    NSLog(@"Writing buffer %lld\n", recordState->mCurrentPacket);
-
-    OSStatus status = AudioFileWritePackets(recordState->mAudioFile,
+    //  Writing an Audio Queue Buffer to Disk
+    OSStatus status = AudioFileWritePackets(pAqData->mAudioFile,
                                             false,
                                             inBuffer->mAudioDataByteSize,
                                             inPacketDesc,
-                                            recordState->mCurrentPacket,
+                                            pAqData->mCurrentPacket,
                                             &inNumPackets,
                                             inBuffer->mAudioData);
-    if (status == 0)
+    if (status == noErr)
     {
-        recordState->mCurrentPacket += inNumPackets;
+        pAqData->mCurrentPacket += inNumPackets;
     }
 
-    AudioQueueEnqueueBuffer(recordState->mQueue, inBuffer, 0, NULL);
+    if (!pAqData->mIsRunning)
+    {
+        NSLog(@"Not recording, returning");
+        return;
+    }
+
+    AudioQueueEnqueueBuffer(pAqData->mQueue, inBuffer, 0, NULL);
 
 }
 
-static void HandleOutputBuffer (void                 *aqData,
+static void HandleOutputBuffer (
+                                void                 *aqData,
                                 AudioQueueRef        inAQ,
-                                AudioQueueBufferRef  inBuffer)
+                                AudioQueueBufferRef  inBuffer
+                                )
 {
 
     AQPlayerState* playState = (AQPlayerState*)aqData;
     if(!playState->mIsRunning)
     {
-        NSLog(@"Not playing, returning\n");
+        NSLog(@"Not playing, returning");
         return;
     }
 
-    NSLog(@"Queuing buffer %lld for playback\n", playState->mCurrentPacket);
+    NSLog(@"Queuing buffer %lld for playback", playState->mCurrentPacket);
 
     AudioStreamPacketDescription* packetDescs;
 
@@ -123,23 +131,89 @@ static void HandleOutputBuffer (void                 *aqData,
 {
     format->mSampleRate = 8000.0;
     format->mFormatID = kAudioFormatLinearPCM;
-    format->mFramesPerPacket = 1;
+    format->mFormatFlags = kLinearPCMFormatFlagIsBigEndian | kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked;
+
     format->mChannelsPerFrame = 1;
-    format->mBytesPerFrame = 2;
-    format->mBytesPerPacket = 2;
     format->mBitsPerChannel = 16;
+    format->mFramesPerPacket = 1;
+    format->mBytesPerPacket = 2;
+
+    format->mBytesPerFrame = 2;
     format->mReserved = 0;
-    format->mFormatFlags = kLinearPCMFormatFlagIsBigEndian     |
-    kLinearPCMFormatFlagIsSignedInteger |
-    kLinearPCMFormatFlagIsPacked;
+}
+
+//  Derive Recording Audio Queue Buffer Size
+void DeriveBufferSize (
+                       AudioQueueRef                audioQueue,
+                       AudioStreamBasicDescription  ASBDescription,
+                       Float64                      seconds,
+                       UInt32                       *outBufferSize
+                       ) {
+    static const int maxBufferSize = 0x50000;
+
+    int maxPacketSize = ASBDescription.mBytesPerPacket;
+    if (maxPacketSize == 0) {
+        UInt32 maxVBRPacketSize = sizeof(maxPacketSize);
+        AudioQueueGetProperty (
+                               audioQueue,
+                               kAudioConverterPropertyMaximumOutputPacketSize,
+                               &maxPacketSize,
+                               &maxVBRPacketSize
+                               );
+    }
+
+    Float64 numBytesForTime =
+    ASBDescription.mSampleRate * maxPacketSize * seconds;
+    *outBufferSize =  (UInt32) ((numBytesForTime < maxBufferSize) ? numBytesForTime : maxBufferSize);
+}
+
+/*
+Some compressed audio formats, such as MPEG 4 AAC, make use of structures that contain audio metadata. 
+These structures are called magic cookies. When you record to such a format using Audio Queue Services, 
+you must get the magic cookie from the audio queue and add it to the audio file before you start recording
+*/
+OSStatus SetMagicCookieForFile (
+                                AudioQueueRef inQueue,
+                                AudioFileID   inFile
+) {
+    OSStatus result = noErr;
+    UInt32 cookieSize;
+
+    if (
+        AudioQueueGetPropertySize (
+                                   inQueue,
+                                   kAudioQueueProperty_MagicCookie,
+                                   &cookieSize
+                                   ) == noErr
+        ) {
+        char* magicCookie =
+        (char *) malloc (cookieSize);
+        if (
+            AudioQueueGetProperty (
+                                   inQueue,
+                                   kAudioQueueProperty_MagicCookie,
+                                   magicCookie,
+                                   &cookieSize
+                                   ) == noErr
+            )
+            result =    AudioFileSetProperty (
+                                              inFile,
+                                              kAudioFilePropertyMagicCookieData,
+                                              cookieSize,
+                                              magicCookie
+                                              );
+        free (magicCookie);
+    }
+    return result;
 }
 
 - (void)startRecording {
     NSLog(@"startRecording");
     [self setupAudioFormat:&_recordState.mDataFormat];
-    _recordState.mCurrentPacket = 0;
 
     OSStatus status;
+
+    //  Creating a recording audio queue
     status = AudioQueueNewInput(&_recordState.mDataFormat,
                                 HandleInputBuffer,
                                 &_recordState,
@@ -148,39 +222,68 @@ static void HandleOutputBuffer (void                 *aqData,
                                 0,
                                 &_recordState.mQueue);
 
-    if (status == 0) {
-        for (int i = 0; i < kNumberBuffers; i++)
-        {
-            AudioQueueAllocateBuffer(_recordState.mQueue, 16000, &_recordState.mBuffers[i]);
-            AudioQueueEnqueueBuffer (_recordState.mQueue, _recordState.mBuffers[i], 0, NULL);
-        }
-
-        status = AudioFileCreateWithURL(_fileURL,
-                                        kAudioFileAIFFType,
-                                        &_recordState.mDataFormat,
-                                        kAudioFileFlags_EraseFile,
-                                        &_recordState.mAudioFile);
-        if (status == 0)
-        {
-            _recordState.mIsRunning = true;
-            status = AudioQueueStart(_recordState.mQueue, NULL);
-            if (status == 0)
-            {
-                self.labelState.text = @"Recording";
-            }
-        }
-    }
-    else {
+    if (status != 0) {
         [self stopRecording];
         self.labelState.text = @"Record Failed";
+        return;
     }
+
+    //  Create an Audio File
+    status = AudioFileCreateWithURL(_fileURL,
+                                    kAudioFileAIFFType,
+                                    &_recordState.mDataFormat,
+                                    kAudioFileFlags_EraseFile,
+                                    &_recordState.mAudioFile);
+
+    if (status != 0) {
+        [self stopRecording];
+        self.labelState.text = @"Create file Failed";
+        return;
+    }
+
+    DeriveBufferSize (
+                      _recordState.mQueue,
+                      _recordState.mDataFormat,
+                      0.5,
+                      &_recordState.bufferByteSize
+                      );
+
+    for (int i = 0; i < kNumberBuffers; i++)
+    {
+        AudioQueueAllocateBuffer(_recordState.mQueue, 16000, &_recordState.mBuffers[i]);
+        AudioQueueEnqueueBuffer (_recordState.mQueue, _recordState.mBuffers[i], 0, NULL);
+    }
+
+//    status = SetMagicCookieForFile(_recordState.mQueue, _recordState.mAudioFile);
+//    if (status != 0)
+//    {
+//        [self stopRecording];
+//        self.labelState.text = @"Magic cookie failed";
+//        return;
+//    }
+
+    status = AudioQueueStart(_recordState.mQueue, NULL);
+
+    if (status != 0)
+    {
+        [self stopRecording];
+        self.labelState.text = @"QueueStart failed";
+        return;
+    }
+
+    _recordState.mCurrentPacket = 0;
+    _recordState.mIsRunning = true;
+    self.labelState.text = @"Recording";
 }
 
 - (void)stopRecording {
     NSLog(@"stopRecording");
     _recordState.mIsRunning = false;
 
+    AudioQueueFlush(_recordState.mQueue);
     AudioQueueStop(_recordState.mQueue, true);
+//    SetMagicCookieForFile(_recordState.mQueue, _recordState.mAudioFile);
+
     for(int i = 0; i < kNumberBuffers; i++)
     {
         AudioQueueFreeBuffer(_recordState.mQueue, _recordState.mBuffers[i]);
@@ -199,37 +302,42 @@ static void HandleOutputBuffer (void                 *aqData,
 
     OSStatus status;
     status = AudioFileOpenURL(_fileURL, kAudioFileReadPermission, kAudioFileAIFFType, &_playState.mAudioFile);
-    if (status == 0)
-    {
-        status = AudioQueueNewOutput(&_playState.mDataFormat,
-                                     HandleOutputBuffer,
-                                     &_playState,
-                                     CFRunLoopGetCurrent(),
-                                     kCFRunLoopCommonModes,
-                                     0,
-                                     &_playState.mQueue);
-
-        if (status == 0)
-        {
-            // Allocate and prime playback buffers
-            _playState.mIsRunning = true;
-            for (int i = 0; i < kNumberBuffers && _playState.mIsRunning; i++)
-            {
-                AudioQueueAllocateBuffer(_playState.mQueue, 16000, &_playState.mBuffers[i]);
-                HandleOutputBuffer(&_playState, _playState.mQueue, _playState.mBuffers[i]);
-            }
-
-            status = AudioQueueStart(_playState.mQueue, NULL);
-            if (status == 0)
-            {
-                self.labelState.text = @"Playing";
-            }
-        }
-    }
-    else{
+    if (status != 0) {
         [self stopPlayback];
-        self.labelState.text = @"Play failed";
+        self.labelState.text = @"AudioFileOpenURL failed";
     }
+
+
+    status = AudioQueueNewOutput(&_playState.mDataFormat,
+                                 HandleOutputBuffer,
+                                 &_playState,
+                                 CFRunLoopGetCurrent(),
+                                 kCFRunLoopCommonModes,
+                                 0,
+                                 &_playState.mQueue);
+
+    if (status != 0) {
+        [self stopPlayback];
+        self.labelState.text = @"AudioQueueNewOutput failed";
+    }
+
+    // Allocate and prime playback buffers
+    _playState.mIsRunning = true;
+    for (int i = 0; i < kNumberBuffers && _playState.mIsRunning; i++)
+    {
+        AudioQueueAllocateBuffer(_playState.mQueue, 16000, &_playState.mBuffers[i]);
+        HandleOutputBuffer(&_playState, _playState.mQueue, _playState.mBuffers[i]);
+    }
+
+    status = AudioQueueStart(_playState.mQueue, NULL);
+
+    if (status != 0) {
+        _playState.mIsRunning = false;
+        [self stopPlayback];
+        self.labelState.text = @"AudioQueueNewOutput failed";
+    }
+
+    self.labelState.text = @"Playing";
 }
 
 - (void)stopPlayback {
