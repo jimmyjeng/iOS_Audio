@@ -48,39 +48,39 @@
     NSString* viewText = _logView.text;
     switch (event) {
         case 1000:
-            viewText =  [viewText stringByAppendingString:@"开始发布\r\n"];
+            viewText =  [viewText stringByAppendingString:@"Start Publish\r\n"];
             break;
         case 1001:
-            viewText = [viewText stringByAppendingString:@"发布成功\r\n"];
+            viewText = [viewText stringByAppendingString:@"Publish Success\r\n"];
             [self.btnRecord setTitle:@"Stop" forState:UIControlStateNormal];
             self.isStartRecord = YES;
             break;
         case 1002:
-            viewText = [viewText stringByAppendingString:@"发布失败\r\n"];
+            viewText = [viewText stringByAppendingString:@"Publish Fail\r\n"];
             break;
         case 1004:
-            viewText = [viewText stringByAppendingString:@"发布结束\r\n"];
+            viewText = [viewText stringByAppendingString:@"Publish Done\r\n"];
             [self.btnRecord setTitle:@"Publish" forState:UIControlStateNormal];
             self.isStartRecord = NO;
             break;
         case 2000:
-            viewText =  [viewText stringByAppendingString:@"开始播放\r\n"];
+            viewText =  [viewText stringByAppendingString:@"Start Play\r\n"];
             break;
         case 2001:
-            viewText = [viewText stringByAppendingString:@"播放成功\r\n"];
+            viewText = [viewText stringByAppendingString:@"Play Success\r\n"];
 //            [self performSelectorOnMainThread:@selector(updatePlayBtn:) withObject:@"Stop" waitUntilDone:YES];
 //            isStartPlay = YES;
             break;
         case 2002:
-            viewText = [viewText stringByAppendingString:@"播放失败\r\n"];
+            viewText = [viewText stringByAppendingString:@"Play Fail\r\n"];
             break;
         case 2004:
-            viewText = [viewText stringByAppendingString:@"播放结束\r\n"];
+            viewText = [viewText stringByAppendingString:@"Play done\r\n"];
 //            [self performSelectorOnMainThread:@selector(updatePlayBtn:) withObject:@"Play" waitUntilDone:YES];
 //            isStartPlay = NO;
             break;
         case 2005:
-            viewText = [viewText stringByAppendingString:@"播放异常结束或发布端关闭\r\n"];
+            viewText = [viewText stringByAppendingString:@"Error or Publish shutdown\r\n"];
             break;
         default:
             break;

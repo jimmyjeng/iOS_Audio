@@ -28,7 +28,7 @@
     
 }
 
-@property id<AudioRecordDelegate> outDelegate;
+@property (nonatomic, weak)id<AudioRecordDelegate> outDelegate;
 
 -(id)initWIthSampleRate:(int)sampleRate;
 -(void)setAudioRecordDelegate:(id<AudioRecordDelegate>)delegate;

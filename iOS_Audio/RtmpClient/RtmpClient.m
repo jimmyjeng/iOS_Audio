@@ -46,7 +46,7 @@ void propListener(	void *                  inClientData,
     self = [super init];
     if(self){
         mAudioRecord = [[AudioRecoder alloc] initWIthSampleRate:sampleRate];
-        [mAudioRecord setOutDelegate:self];
+        [mAudioRecord setAudioRecordDelegate:self];
         mAudioPlayer = [[AudioPlayer alloc] initWithSampleRate:sampleRate];
         condition = [[NSCondition alloc] init];
         
@@ -89,6 +89,7 @@ void propListener(	void *                  inClientData,
     NSThread *thread = [[NSThread alloc]initWithTarget:self selector:@selector(openPublishThread:) object:rtmpURL];
     [thread start];
 }
+
 -(void)stopPublish
 {
     [condition lock];
@@ -102,6 +103,7 @@ void propListener(	void *                  inClientData,
     NSThread *thread = [[NSThread alloc]initWithTarget:self selector:@selector(openPlayThread:) object:rtmpURL];
     [thread start];
 }
+
 -(void)stopPlay
 {
     isStartPlay = NO;
@@ -230,23 +232,23 @@ void propListener(	void *                  inClientData,
                 if (!rtmp_pakt.m_nBodySize)
                     continue;
                 if (rtmp_pakt.m_packetType == RTMP_PACKET_TYPE_AUDIO) {
-                    // 处理音频数据包
+                    // process audio packet
                    // NSLog(@"AUDIO audio size:%d  head:%d  time:%d\n", rtmp_pakt.m_nBodySize, rtmp_pakt.m_body[0], rtmp_pakt.m_nTimeStamp);
                     speex_bits_read_from(&dbits, rtmp_pakt.m_body + 1, rtmp_pakt.m_nBodySize - 1);
                     speex_decode_int(dec_state, &dbits, input_buffer);
                //     putAudioQueue(output_buffer,dec_frame_size);
                     [mAudioPlayer putAudioData:input_buffer];
                 } else if (rtmp_pakt.m_packetType == RTMP_PACKET_TYPE_VIDEO) {
-                    // 处理视频数据包
+                    // process video packet
                 } else if (rtmp_pakt.m_packetType == RTMP_PACKET_TYPE_INVOKE) {
-                    // 处理invoke包
+                    // process invoke packet
                     NSLog(@"RTMP_PACKET_TYPE_INVOKE");
                     RTMP_ClientPacket(pPlayRtmp,&rtmp_pakt);
                 } else if (rtmp_pakt.m_packetType == RTMP_PACKET_TYPE_INFO) {
-                    // 处理信息包
+                    // process info packet
                     //NSLog(@"RTMP_PACKET_TYPE_INFO");
                 } else if (rtmp_pakt.m_packetType == RTMP_PACKET_TYPE_FLASH_VIDEO) {
-                    // 其他数据
+                    // process other packet
                     int index = 0;
                     while (1) {
                         int StreamType; //1-byte
@@ -271,7 +273,7 @@ void propListener(	void *                  inClientData,
                         //NSLog(@"bodySize:%d   index:%d",rtmp_pakt.m_nBodySize,index);
                         //LOGI("StreamType:%d MediaSize:%d  TiMMER:%d TagLen:%d\n", StreamType, MediaSize, TiMMER, TagLen);
                         if (StreamType == 0x08) {
-                            //音频包
+                            // audio packet
                             //int MediaSize = bigThreeByteToInt(rtmp_pakt.m_body+1);
                             //  LOGI("FLASH audio size:%d  head:%d time:%d\n", MediaSize, MediaData[0], TiMMER);
                             speex_bits_read_from(&dbits, MediaData + 1, MediaSize - 1);
@@ -279,7 +281,7 @@ void propListener(	void *                  inClientData,
                             [mAudioPlayer putAudioData:input_buffer];
                           //  putAudioQueue(output_buffer,dec_frame_size);
                         } else if (StreamType == 0x09) {
-                            //视频包
+                            // video packet
                             //  LOGI( "video size:%d  head:%d\n", MediaSize, MediaData[0]);
                         }
                         if (rtmp_pakt.m_nBodySize == index) {
@@ -329,8 +331,5 @@ void propListener(	void *                  inClientData,
         send_pkt(pPubRtmp,send_buf, enc_size + 1, RTMP_PACKET_TYPE_AUDIO, pubTs += 20);
         free(send_buf);
     }
-
 }
-
-
 @end
