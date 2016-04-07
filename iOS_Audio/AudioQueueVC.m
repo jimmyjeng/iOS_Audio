@@ -1,24 +1,23 @@
 //
-//  ViewController.m
+//  AudioQueueVC.m
 //  iOS_Audio
 //
 //  Created by JimmyJeng on 2016/3/31.
-//  Copyright © 2016年 JimmyJeng. All rights reserved.
+//  Copyright © 2016 JimmyJeng. All rights reserved.
 //
 
-#import "ViewController.h"
-#import <AudioToolbox/audioconverter.h>
+#import "AudioQueueVC.h"
+#import <AudioToolbox/AudioToolbox.h>
 
-@interface ViewController ()
+@interface AudioQueueVC ()
 
 @property (weak, nonatomic) IBOutlet UILabel *labelState;
 @property AQRecorderState recordState;
 @property AQPlayerState playState;
 @property CFURLRef fileURL;
-
 @end
 
-@implementation ViewController
+@implementation AudioQueueVC
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -43,35 +42,37 @@ static void HandleInputBuffer (
                                )
 {
 
-    AQRecorderState *pAqData = (AQRecorderState *) aqData;
+    AQRecorderState *recordState = (AQRecorderState *) aqData;
 
-    if (inNumPackets == 0 && pAqData->mDataFormat.mBytesPerPacket != 0)
+    if (inNumPackets == 0 && recordState->mDataFormat.mBytesPerPacket != 0)
     {
-        inNumPackets = inBuffer->mAudioDataByteSize / pAqData->mDataFormat.mBytesPerPacket;
+        inNumPackets = inBuffer->mAudioDataByteSize / recordState->mDataFormat.mBytesPerPacket;
     }
 
-    NSLog(@"Writing buffer %lld", pAqData->mCurrentPacket);
+    NSLog(@"Writing buffer %lld", recordState->mCurrentPacket);
 
     //  Writing an Audio Queue Buffer to Disk
-    OSStatus status = AudioFileWritePackets(pAqData->mAudioFile,
+    OSStatus status = AudioFileWritePackets(recordState->mAudioFile,
                                             false,
                                             inBuffer->mAudioDataByteSize,
                                             inPacketDesc,
-                                            pAqData->mCurrentPacket,
+                                            recordState->mCurrentPacket,
                                             &inNumPackets,
                                             inBuffer->mAudioData);
     if (status == noErr)
     {
-        pAqData->mCurrentPacket += inNumPackets;
+        recordState->mCurrentPacket += inNumPackets;
     }
 
-    if (!pAqData->mIsRunning)
+    if (!recordState->mIsRunning)
     {
         NSLog(@"Not recording, returning");
         return;
     }
 
-    AudioQueueEnqueueBuffer(pAqData->mQueue, inBuffer, 0, NULL);
+    AudioQueueEnqueueBuffer(recordState->mQueue, inBuffer, 0, NULL);
+
+
 
 }
 
@@ -140,6 +141,7 @@ static void HandleOutputBuffer (
 
     format->mBytesPerFrame = 2;
     format->mReserved = 0;
+
 }
 
 //  Derive Recording Audio Queue Buffer Size
@@ -168,14 +170,14 @@ void DeriveBufferSize (
 }
 
 /*
-Some compressed audio formats, such as MPEG 4 AAC, make use of structures that contain audio metadata. 
-These structures are called magic cookies. When you record to such a format using Audio Queue Services, 
-you must get the magic cookie from the audio queue and add it to the audio file before you start recording
-*/
+ Some compressed audio formats, such as MPEG 4 AAC, make use of structures that contain audio metadata.
+ These structures are called magic cookies. When you record to such a format using Audio Queue Services,
+ you must get the magic cookie from the audio queue and add it to the audio file before you start recording
+ */
 OSStatus SetMagicCookieForFile (
                                 AudioQueueRef inQueue,
                                 AudioFileID   inFile
-) {
+                                ) {
     OSStatus result = noErr;
     UInt32 cookieSize;
 
@@ -235,11 +237,11 @@ OSStatus SetMagicCookieForFile (
                                     kAudioFileFlags_EraseFile,
                                     &_recordState.mAudioFile);
 
-    if (status != 0) {
-        [self stopRecording];
-        self.labelState.text = @"Create file Failed";
-        return;
-    }
+//    if (status != 0) {
+//        [self stopRecording];
+//        self.labelState.text = @"Create file Failed";
+//        return;
+//    }
 
     DeriveBufferSize (
                       _recordState.mQueue,
@@ -254,13 +256,13 @@ OSStatus SetMagicCookieForFile (
         AudioQueueEnqueueBuffer (_recordState.mQueue, _recordState.mBuffers[i], 0, NULL);
     }
 
-//    status = SetMagicCookieForFile(_recordState.mQueue, _recordState.mAudioFile);
-//    if (status != 0)
-//    {
-//        [self stopRecording];
-//        self.labelState.text = @"Magic cookie failed";
-//        return;
-//    }
+    //    status = SetMagicCookieForFile(_recordState.mQueue, _recordState.mAudioFile);
+    //    if (status != 0)
+    //    {
+    //        [self stopRecording];
+    //        self.labelState.text = @"Magic cookie failed";
+    //        return;
+    //    }
 
     status = AudioQueueStart(_recordState.mQueue, NULL);
 
@@ -282,7 +284,7 @@ OSStatus SetMagicCookieForFile (
 
     AudioQueueFlush(_recordState.mQueue);
     AudioQueueStop(_recordState.mQueue, true);
-//    SetMagicCookieForFile(_recordState.mQueue, _recordState.mAudioFile);
+    //    SetMagicCookieForFile(_recordState.mQueue, _recordState.mAudioFile);
 
     for(int i = 0; i < kNumberBuffers; i++)
     {
@@ -399,6 +401,6 @@ OSStatus SetMagicCookieForFile (
         [self stopPlayback];
     }
     self.labelState.text = @"Idle";
-
+    
 }
 @end

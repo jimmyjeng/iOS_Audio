@@ -1,0 +1,37 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "08FBB3AB492EF0F07F7678CDD39CB0264DDFB246",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "5ABA1D247BD95C540956C3BC176D8C78F61BE252" : 0,
+    "08FBB3AB492EF0F07F7678CDD39CB0264DDFB246" : 0,
+    "8092C8C7FB5C3FF769ACA4A4D09F354B1F39375F" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "24FCE765-2B99-4A72-B793-51E8F18D5921",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "5ABA1D247BD95C540956C3BC176D8C78F61BE252" : "iOS_Audio\/iOS_Audio\/librtmp\/",
+    "08FBB3AB492EF0F07F7678CDD39CB0264DDFB246" : "iOS_Audio\/",
+    "8092C8C7FB5C3FF769ACA4A4D09F354B1F39375F" : "iOS_Audio\/iOS_Audio\/OpenSSL\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "iOS_Audio",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "iOS_Audio.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/jimmyjeng\/iOS_Audio.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "08FBB3AB492EF0F07F7678CDD39CB0264DDFB246"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/saiten\/ios-librtmp.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "5ABA1D247BD95C540956C3BC176D8C78F61BE252"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/x2on\/OpenSSL-for-iPhone.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "8092C8C7FB5C3FF769ACA4A4D09F354B1F39375F"
+    }
+  ]
+}

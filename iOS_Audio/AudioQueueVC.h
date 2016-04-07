@@ -1,9 +1,9 @@
 //
-//  ViewController.h
+//  AudioQueueVC.h
 //  iOS_Audio
 //
 //  Created by JimmyJeng on 2016/3/31.
-//  Copyright © 2016年 JimmyJeng. All rights reserved.
+//  Copyright © 2016 JimmyJeng. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
@@ -31,7 +31,7 @@ typedef struct {
     SInt64                        mCurrentPacket;
     UInt32                        mNumPacketsToRead;
     AudioStreamPacketDescription  *mPacketDescs;
-    bool                          mIsRunning;                     
+    bool                          mIsRunning;
 }AQPlayerState;
 
 static void HandleInputBuffer (void                                *aqData,
@@ -46,8 +46,7 @@ static void HandleOutputBuffer (void                 *aqData,
                                 AudioQueueBufferRef  inBuffer);
 
 
-@interface ViewController : UIViewController
+@interface AudioQueueVC : UIViewController
 
 
 @end
-
