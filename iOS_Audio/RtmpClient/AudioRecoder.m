@@ -29,6 +29,7 @@ void MyInputBufferHandler(void *                                inUserData,
 {
     self = [super init];
     if (self !=NULL) {
+#ifdef SPEEX
         memset(&mRecordFormat, 0, sizeof(mRecordFormat));
         mRecordFormat.mFormatID = kAudioFormatLinearPCM;
         mRecordFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked;
@@ -37,6 +38,17 @@ void MyInputBufferHandler(void *                                inUserData,
         mRecordFormat.mBytesPerPacket = mRecordFormat.mBytesPerFrame = (mRecordFormat.mBitsPerChannel / 8) * mRecordFormat.mChannelsPerFrame;
         mRecordFormat.mFramesPerPacket = 1;
         mRecordFormat.mSampleRate = sampleRate;
+#else
+        mRecordFormat.mFormatID = kAudioFormatMPEG4AAC;
+        mRecordFormat.mFormatFlags = kMPEG4Object_AAC_LC;
+        mRecordFormat.mSampleRate = 44100.0;
+        mRecordFormat.mChannelsPerFrame = 2;
+
+        mRecordFormat.mBitsPerChannel  = 0; // 0 for compressed format
+        mRecordFormat.mBytesPerFrame   = 0; // 0 for compressed format
+        mRecordFormat.mBytesPerPacket  = 0; // 0 for variable packet size (VBR)
+        mRecordFormat.mFramesPerPacket = 1024;
+#endif
     }
     return self;
 }

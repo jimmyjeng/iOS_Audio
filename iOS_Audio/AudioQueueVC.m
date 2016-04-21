@@ -229,7 +229,7 @@ OSStatus SetMagicCookieForFile (
         self.labelState.text = @"Record Failed";
         return;
     }
-
+    
     //  Create an Audio File
     status = AudioFileCreateWithURL(_fileURL,
                                     kAudioFileAIFFType,
@@ -237,11 +237,11 @@ OSStatus SetMagicCookieForFile (
                                     kAudioFileFlags_EraseFile,
                                     &_recordState.mAudioFile);
 
-//    if (status != 0) {
-//        [self stopRecording];
-//        self.labelState.text = @"Create file Failed";
-//        return;
-//    }
+    if (status != 0) {
+        [self stopRecording];
+        self.labelState.text = @"Create file Failed";
+        return;
+    }
 
     DeriveBufferSize (
                       _recordState.mQueue,
@@ -256,13 +256,13 @@ OSStatus SetMagicCookieForFile (
         AudioQueueEnqueueBuffer (_recordState.mQueue, _recordState.mBuffers[i], 0, NULL);
     }
 
-    //    status = SetMagicCookieForFile(_recordState.mQueue, _recordState.mAudioFile);
-    //    if (status != 0)
-    //    {
-    //        [self stopRecording];
-    //        self.labelState.text = @"Magic cookie failed";
-    //        return;
-    //    }
+    status = SetMagicCookieForFile(_recordState.mQueue, _recordState.mAudioFile);
+    if (status != 0)
+    {
+        [self stopRecording];
+        self.labelState.text = @"Magic cookie failed";
+        return;
+    }
 
     status = AudioQueueStart(_recordState.mQueue, NULL);
 

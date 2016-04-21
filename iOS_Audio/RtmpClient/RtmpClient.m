@@ -29,16 +29,40 @@ void send_pkt(RTMP* pRtmp,char* buf, int buflen, int type, unsigned int timestam
     RTMPPacket_Free(&rtmp_pakt);
 }
 
-void interruptionListener(	void *	inClientData,  UInt32	inInterruptionState)
-{
-
+- (void)audioSessionRouteChange:(NSNotification *)notification {
+    NSInteger routeChangeReason = [notification.userInfo[AVAudioSessionRouteChangeReasonKey] integerValue];
+    NSString *log = nil;
+    switch (routeChangeReason) {
+        case AVAudioSessionRouteChangeReasonCategoryChange:
+            log = @"AVAudioSessionRouteChangeReasonCategoryChange";
+            break;
+        case AVAudioSessionRouteChangeReasonNewDeviceAvailable:
+            log = @"AVAudioSessionRouteChangeReasonNewDeviceAvailable";
+            break;
+        case AVAudioSessionRouteChangeReasonNoSuitableRouteForCategory:
+            log = @"AVAudioSessionRouteChangeReasonNoSuitableRouteForCategory";
+            break;
+        case AVAudioSessionRouteChangeReasonOldDeviceUnavailable:
+            log = @"AVAudioSessionRouteChangeReasonOldDeviceUnavailable";
+            break;
+        case AVAudioSessionRouteChangeReasonOverride:
+            log = @"AVAudioSessionRouteChangeReasonOverride";
+            break;
+        case AVAudioSessionRouteChangeReasonRouteConfigurationChange:
+            log = @"AVAudioSessionRouteChangeReasonRouteConfigurationChange";
+            break;
+        case AVAudioSessionRouteChangeReasonUnknown:
+            log = @"AVAudioSessionRouteChangeReasonUnknown";
+            break;
+        case AVAudioSessionRouteChangeReasonWakeFromSleep:
+            log = @"AVAudioSessionRouteChangeReasonWakeFromSleep";
+            break;
+    }
+    NSLog(@"audioSessionRouteChange [%@]",log);
 }
-void propListener(	void *                  inClientData,
-                  AudioSessionPropertyID	inID,
-                  UInt32                  inDataSize,
-                  const void *            inData)
-{
-    
+
+- (void)audioSessionInterruption:(NSNotification *)notification {
+    NSLog(@"audioSessionInterruption");
 }
 
 -(id)initWithSampleRate:(int)sampleRate withEncoder:(int)audioEncoder
@@ -49,31 +73,20 @@ void propListener(	void *                  inClientData,
         [mAudioRecord setAudioRecordDelegate:self];
         mAudioPlayer = [[AudioPlayer alloc] initWithSampleRate:sampleRate];
         condition = [[NSCondition alloc] init];
-        
-        OSStatus error = AudioSessionInitialize(NULL, NULL, interruptionListener, (__bridge void *)(self));
-        if (error) printf("ERROR INITIALIZING AUDIO SESSION! %d\n", (int)error);
+
+        AVAudioSession *session = [AVAudioSession sharedInstance];
+        NSError *sessionError;
+        [session setCategory:AVAudioSessionCategoryPlayAndRecord error:&sessionError];
+        if(session == nil)
+        {
+            NSLog(@"Error creating session: %@", [sessionError description]);
+        }
         else
         {
-            UInt32 category = kAudioSessionCategory_PlayAndRecord;
-            error = AudioSessionSetProperty(kAudioSessionProperty_AudioCategory, sizeof(category), &category);
-            if (error) printf("couldn't set audio category!");
-            
-            error = AudioSessionAddPropertyListener(kAudioSessionProperty_AudioRouteChange, propListener, (__bridge void *)self);
-            if (error) printf("ERROR ADDING AUDIO SESSION PROP LISTENER! %d\n", (int)error);
-            UInt32 inputAvailable = 0;
-            UInt32 size = sizeof(inputAvailable);
-            
-            // we do not want to allow recording if input is not available
-            error = AudioSessionGetProperty(kAudioSessionProperty_AudioInputAvailable, &size, &inputAvailable);
-            if (error) printf("ERROR GETTING INPUT AVAILABILITY! %d\n", (int)error);
-            
-            // we also need to listen to see if input availability changes
-            error = AudioSessionAddPropertyListener(kAudioSessionProperty_AudioInputAvailable, propListener, (__bridge void *)self);
-            if (error) printf("ERROR ADDING AUDIO SESSION PROP LISTENER! %d\n", (int)error);
-            
-            error = AudioSessionSetActive(true); 
-            if (error) printf("AudioSessionSetActive (true) failed");
+            [session setActive:YES error:nil];
         }
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioSessionRouteChange:) name:AVAudioSessionRouteChangeNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioSessionInterruption:) name:AVAudioSessionInterruptionNotification object:nil];
     }
     return self;
 }
@@ -119,6 +132,7 @@ void propListener(	void *                  inClientData,
             [outDelegate EventCallback:1000];
         }
         //1 init speex encoder
+#ifdef SPEEX
         speex_bits_init(&ebits);
         enc_state = speex_encoder_init(&speex_wb_mode);
         speex_encoder_ctl(enc_state, SPEEX_SET_QUALITY, &quality);
@@ -128,13 +142,14 @@ void propListener(	void *                  inClientData,
         pcm_buffer = malloc(enc_frame_size * sizeof(short));
         output_buffer = malloc(enc_frame_size * sizeof(char));
         NSLog(@"Speex Encoder init,enc_frame_size:%d sample_rate:%d vad:%d\n", enc_frame_size, sample_rate,vad);
-        
+#endif
         //2 init rtmp
         pPubRtmp = RTMP_Alloc();
         RTMP_Init(pPubRtmp);
         if(!RTMP_SetupURL(pPubRtmp, (char*)[rtmpUrl UTF8String]))
         {
             NSLog(@"RTMP_SetupURL error");
+            isStartPub = NO;
             if(outDelegate)
             {
                 [outDelegate EventCallback:1002];
@@ -145,6 +160,7 @@ void propListener(	void *                  inClientData,
         NSLog(@"RTMP_EnableWrite");
         if (!RTMP_Connect(pPubRtmp, NULL) || !RTMP_ConnectStream(pPubRtmp, 0)) {
             NSLog(@"RTMP_Connect or RTMP_ConnectStream error!");
+            isStartPub = NO;
             if(outDelegate)
             {
                 [outDelegate EventCallback:1002];
@@ -152,6 +168,9 @@ void propListener(	void *                  inClientData,
             break;
         }
         NSLog(@"Publisher RTMP_Connected");
+#ifndef SPEEX
+        [self sendAACSpec];
+#endif
         [mAudioRecord startRecord];
         if(outDelegate)
         {
@@ -169,16 +188,19 @@ void propListener(	void *                  inClientData,
         RTMP_Close(pPubRtmp);
     }
     RTMP_Free(pPubRtmp);
+#ifdef SPEEX
     free(pcm_buffer);
     free(output_buffer);
     speex_bits_destroy(&ebits);
     speex_encoder_destroy(enc_state);
+#endif
     if(outDelegate)
     {
         [outDelegate EventCallback:1004];
     }
 }
 
+//  FIXME
 -(void)openPlayThread:(NSString*) rtmpUrl
 {
     spx_int16_t *input_buffer;
@@ -189,12 +211,13 @@ void propListener(	void *                  inClientData,
             [outDelegate EventCallback:2000];
         }
         //1. init speex decoder
+#ifdef SPEEX
         speex_bits_init(&dbits);
         dec_state = speex_decoder_init(&speex_wb_mode);
         speex_decoder_ctl(dec_state, SPEEX_GET_FRAME_SIZE, &dec_frame_size);
         input_buffer = malloc(dec_frame_size * sizeof(short));
-        
         NSLog(@"Init Speex decoder success frame_size = %d",dec_frame_size);
+#endif
         
         //2. init rtmp
         pPlayRtmp = RTMP_Alloc();
@@ -311,14 +334,50 @@ void propListener(	void *                  inClientData,
         RTMP_Close(pPlayRtmp);
     }
     RTMP_Free(pPlayRtmp);
+#ifdef SPEEX
     free(input_buffer);
     speex_bits_destroy(&dbits);
     speex_decoder_destroy(dec_state);
+#endif
+}
+
+- (void)sendAACSpec {
+    /*
+     AudioTagHeader
+     [UB4]:10,soundformat:aac
+     [UB2]:3,sample reate,44k
+     [UB1]:1,bitspersample,16bit
+     [UB1]:1,channel,2
+     => AF
+
+     aac sequence header => 00
+     aac raw data        => 01
+
+     AAC sequence header
+     [UB5]:2,aac-lc
+     [UB4]:4,sample reate,44k
+     [UB4]:2,channel
+     [UB1]:1,0
+     [UB1]:1,0
+     [UB1]:1,0
+     => 12 10
+     */
+    char *aac_head = malloc(4);
+    aac_head[0] = '\xAF';
+    aac_head[1] = '\x00';
+    aac_head[2] = '\x12';
+    aac_head[3] = '\x10';
+
+    char *send_buf = malloc(4);
+    memcpy(send_buf, aac_head, 4);
+    send_pkt(pPubRtmp,send_buf, 4, RTMP_PACKET_TYPE_AUDIO, 0);
+    free(send_buf);
 }
 
 -(void)AudioDataOutputBuffer:(char *)audioBuffer bufferSize:(int)size
 {
     if (isStartPub) {
+#ifdef SPEEX
         const char speex_head = '\xB6';
         speex_bits_reset(&ebits);
         memcpy(pcm_buffer, audioBuffer, enc_frame_size * sizeof(short));
@@ -330,6 +389,17 @@ void propListener(	void *                  inClientData,
         memcpy(send_buf + 1, output_buffer, enc_size);
         send_pkt(pPubRtmp,send_buf, enc_size + 1, RTMP_PACKET_TYPE_AUDIO, pubTs += 20);
         free(send_buf);
+#else
+        unsigned char *aac_head = malloc(2);
+        aac_head[0] = '\xAF';
+        aac_head[1] = '\x01';
+
+        char* send_buf = malloc(size + 2);
+        memcpy(send_buf, aac_head, 2);
+        memcpy(send_buf + 2, audioBuffer, size);
+        send_pkt(pPubRtmp,send_buf, size + 2, RTMP_PACKET_TYPE_AUDIO, pubTs += 20);
+        free(send_buf);
+#endif
     }
 }
 @end

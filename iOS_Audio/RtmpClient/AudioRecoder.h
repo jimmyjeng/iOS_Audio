@@ -12,7 +12,8 @@
 #import <AudioToolbox/AudioToolbox.h>
 
 #define kNumberRecordBuffers	3
-
+// if not define then AAC
+#define SPEEX
 @protocol AudioRecordDelegate
 
 -(void)AudioDataOutputBuffer:(char*)audioBuffer bufferSize:(int)size;

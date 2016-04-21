@@ -9,7 +9,7 @@
 #import "CamToRTMPVC.h"
 #import "RtmpClient.h"
 
-@interface CamToRTMPVC () <RtmpClientDelegate>
+@interface CamToRTMPVC () <RtmpClientDelegate, UITextFieldDelegate>
 @property (weak, nonatomic) IBOutlet UITextField *textFieldStream;
 @property RtmpClient *mRtmpClient;
 @property BOOL isStartRecord;
@@ -24,7 +24,7 @@
     // Do any additional setup after loading the view.
     self.mRtmpClient = [[RtmpClient alloc] initWithSampleRate:16000 withEncoder:0];
     [self.mRtmpClient setOutDelegate:self];
-
+    self.textFieldStream.delegate = self;
     self.isStartRecord = NO;
 }
 
@@ -91,6 +91,27 @@
 -(void)updateLogs:(NSString*)text
 {
     self.logView.text = text;
+    if(self.logView.text.length > 0 ) {
+        NSRange bottom = NSMakeRange(self.logView.text.length -1, 1);
+        [self.logView scrollRangeToVisible:bottom];
+    }
+}
+
+- (BOOL)textFieldShouldReturn:(UITextField *)textField {
+    if (textField == self.textFieldStream) {
+        [textField resignFirstResponder];
+        return NO;
+    }
+    return YES;
+}
+
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+    [super touchesBegan:touches withEvent:event];
+
+    UITouch *touch = [touches anyObject];
+    if (touch && [touch view] != self.textFieldStream) {
+        [self.textFieldStream resignFirstResponder];
+    }
 }
 
 @end

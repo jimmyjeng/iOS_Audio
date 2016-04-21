@@ -23,7 +23,8 @@ void AQBufferCallback(void *inUserData,
         if( ret != THIS->mBufferByteSize ) {
             memset(inCompleteAQBuffer->mAudioData,0,THIS->mBufferByteSize);
         }
-        AudioQueueEnqueueBuffer(inAQ, inCompleteAQBuffer, 0, NULL);    }
+        AudioQueueEnqueueBuffer(inAQ, inCompleteAQBuffer, 0, NULL);
+    }
     
 }
 
