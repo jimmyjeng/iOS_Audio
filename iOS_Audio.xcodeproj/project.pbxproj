@@ -54,14 +54,9 @@
 		BF41E2A31CB60049009663A3 /* AudioPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AudioPlayer.m; sourceTree = "<group>"; };
 		BF41E2CA1CB601E8009663A3 /* speex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = speex.h; sourceTree = "<group>"; };
 		BF41E2CB1CB601E8009663A3 /* speex_bits.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = speex_bits.h; sourceTree = "<group>"; };
-		BF41E2CC1CB601E8009663A3 /* speex_buffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = speex_buffer.h; sourceTree = "<group>"; };
 		BF41E2CD1CB601E8009663A3 /* speex_callbacks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = speex_callbacks.h; sourceTree = "<group>"; };
 		BF41E2CE1CB601E8009663A3 /* speex_config_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = speex_config_types.h; sourceTree = "<group>"; };
-		BF41E2CF1CB601E8009663A3 /* speex_echo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = speex_echo.h; sourceTree = "<group>"; };
 		BF41E2D01CB601E8009663A3 /* speex_header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = speex_header.h; sourceTree = "<group>"; };
-		BF41E2D11CB601E8009663A3 /* speex_jitter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = speex_jitter.h; sourceTree = "<group>"; };
-		BF41E2D21CB601E8009663A3 /* speex_preprocess.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = speex_preprocess.h; sourceTree = "<group>"; };
-		BF41E2D31CB601E8009663A3 /* speex_resampler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = speex_resampler.h; sourceTree = "<group>"; };
 		BF41E2D41CB601E8009663A3 /* speex_stereo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = speex_stereo.h; sourceTree = "<group>"; };
 		BF41E2D51CB601E8009663A3 /* speex_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = speex_types.h; sourceTree = "<group>"; };
 		BF41E2D71CB601E8009663A3 /* libspeex.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libspeex.a; sourceTree = "<group>"; };
@@ -236,14 +231,9 @@
 			children = (
 				BF41E2CA1CB601E8009663A3 /* speex.h */,
 				BF41E2CB1CB601E8009663A3 /* speex_bits.h */,
-				BF41E2CC1CB601E8009663A3 /* speex_buffer.h */,
 				BF41E2CD1CB601E8009663A3 /* speex_callbacks.h */,
 				BF41E2CE1CB601E8009663A3 /* speex_config_types.h */,
-				BF41E2CF1CB601E8009663A3 /* speex_echo.h */,
 				BF41E2D01CB601E8009663A3 /* speex_header.h */,
-				BF41E2D11CB601E8009663A3 /* speex_jitter.h */,
-				BF41E2D21CB601E8009663A3 /* speex_preprocess.h */,
-				BF41E2D31CB601E8009663A3 /* speex_resampler.h */,
 				BF41E2D41CB601E8009663A3 /* speex_stereo.h */,
 				BF41E2D51CB601E8009663A3 /* speex_types.h */,
 			);
