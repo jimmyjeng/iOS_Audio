@@ -243,8 +243,7 @@ OSStatus SetMagicCookieForFile (
         return;
     }
 
-    DeriveBufferSize (
-                      _recordState.mQueue,
+    DeriveBufferSize (_recordState.mQueue,
                       _recordState.mDataFormat,
                       0.5,
                       &_recordState.bufferByteSize
@@ -256,13 +255,13 @@ OSStatus SetMagicCookieForFile (
         AudioQueueEnqueueBuffer (_recordState.mQueue, _recordState.mBuffers[i], 0, NULL);
     }
 
-    status = SetMagicCookieForFile(_recordState.mQueue, _recordState.mAudioFile);
-    if (status != 0)
-    {
-        [self stopRecording];
-        self.labelState.text = @"Magic cookie failed";
-        return;
-    }
+//    status = SetMagicCookieForFile(_recordState.mQueue, _recordState.mAudioFile);
+//    if (status != 0)
+//    {
+//        [self stopRecording];
+//        self.labelState.text = @"Magic cookie failed";
+//        return;
+//    }
 
     status = AudioQueueStart(_recordState.mQueue, NULL);
 
