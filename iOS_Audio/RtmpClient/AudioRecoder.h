@@ -13,7 +13,7 @@
 
 #define kNumberRecordBuffers	3
 // if not define then AAC
-#define SPEEX
+//#define SPEEX
 @protocol AudioRecordDelegate
 
 -(void)AudioDataOutputBuffer:(char*)audioBuffer bufferSize:(int)size;
@@ -26,6 +26,7 @@
     AudioQueueRef                   mQueue;
     AudioQueueBufferRef             mBuffers[kNumberRecordBuffers];
     AudioStreamBasicDescription     mRecordFormat;
+    AudioConverterRef               mAudioConverter;
     
 }
 

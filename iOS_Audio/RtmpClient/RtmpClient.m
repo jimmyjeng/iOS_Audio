@@ -169,7 +169,7 @@ void send_pkt(RTMP* pRtmp,char* buf, int buflen, int type, unsigned int timestam
         }
         NSLog(@"Publisher RTMP_Connected");
 #ifndef SPEEX
-        [self sendAACSpec];
+//        [self sendAACSpec];
 #endif
         [mAudioRecord startRecord];
         if(outDelegate)
@@ -345,18 +345,18 @@ void send_pkt(RTMP* pRtmp,char* buf, int buflen, int type, unsigned int timestam
     /*
      AudioTagHeader
      [UB4]:10,soundformat:aac
-     [UB2]:3,sample reate,44k
+     [UB2]:3,sample rate,44k ; 0, sample rate 5.5k
      [UB1]:1,bitspersample,16bit
-     [UB1]:1,channel,2
-     => AF
+     [UB1]:1,channel,2  ; 0,chanel 1
+     => AF ; A2
 
      aac sequence header => 00
      aac raw data        => 01
 
      AAC sequence header
      [UB5]:2,aac-lc
-     [UB4]:4,sample reate,44k
-     [UB4]:2,channel
+     [UB4]:4,sample rate,44k  ; 11, sample rate,8k
+     [UB4]:2,channel ; 1
      [UB1]:1,0
      [UB1]:1,0
      [UB1]:1,0
@@ -365,8 +365,8 @@ void send_pkt(RTMP* pRtmp,char* buf, int buflen, int type, unsigned int timestam
     char *aac_head = malloc(4);
     aac_head[0] = '\xAF';
     aac_head[1] = '\x00';
-    aac_head[2] = '\x12';
-    aac_head[3] = '\x10';
+    aac_head[2] = '\x15';
+    aac_head[3] = '\x88';
 
     char *send_buf = malloc(4);
     memcpy(send_buf, aac_head, 4);
@@ -394,12 +394,39 @@ void send_pkt(RTMP* pRtmp,char* buf, int buflen, int type, unsigned int timestam
         aac_head[0] = '\xAF';
         aac_head[1] = '\x01';
 
+
         char* send_buf = malloc(size + 2);
+
         memcpy(send_buf, aac_head, 2);
         memcpy(send_buf + 2, audioBuffer, size);
-        send_pkt(pPubRtmp,send_buf, size + 2, RTMP_PACKET_TYPE_AUDIO, pubTs += 20);
+        send_pkt(pPubRtmp,send_buf, size + 2 , RTMP_PACKET_TYPE_AUDIO, pubTs += 20);
+        for (int i = 0 ; i < size +2 ; ++i) {
+            NSLog(@"%x",send_buf[i]);
+        }
         free(send_buf);
 #endif
     }
+}
+
+- (unsigned char *) adtsDataForPacketLength:(NSUInteger)packetLength {
+    int adtsLength = 7;
+    unsigned char *packet = (unsigned char *)malloc(sizeof(char) * adtsLength);
+    // Variables Recycled by addADTStoPacket
+    int profile = 2;  //AAC LC
+    //39=MediaCodecInfo.CodecProfileLevel.AACObjectELD;
+    int freqIdx = 4;  //44 KHz
+//    int freqIdx = 11;  //8KHz
+
+    int chanCfg = 1;  //MPEG-4 Audio Channel Configuration. 1 Channel front-center
+    NSUInteger fullLength = adtsLength + packetLength;
+    // fill in ADTS data
+    packet[0] = (char)0xFF; // 11111111     = syncword
+    packet[1] = (char)0xF9; // 1111 1 00 1  = syncword MPEG-2 Layer CRC
+    packet[2] = (char)(((profile-1)<<6) + (freqIdx<<2) +(chanCfg>>2));
+    packet[3] = (char)(((chanCfg&3)<<6) + (fullLength>>11));
+    packet[4] = (char)((fullLength&0x7FF) >> 3);
+    packet[5] = (char)(((fullLength&7)<<5) + 0x1F);
+    packet[6] = (char)0xFC;
+    return packet;
 }
 @end

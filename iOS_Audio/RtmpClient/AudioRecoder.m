@@ -41,8 +41,8 @@ void MyInputBufferHandler(void *                                inUserData,
 #else
         mRecordFormat.mFormatID = kAudioFormatMPEG4AAC;
         mRecordFormat.mFormatFlags = kMPEG4Object_AAC_LC;
-        mRecordFormat.mSampleRate = 44100.0;
-        mRecordFormat.mChannelsPerFrame = 2;
+        mRecordFormat.mSampleRate = 8000;
+        mRecordFormat.mChannelsPerFrame = 1;
 
         mRecordFormat.mBitsPerChannel  = 0; // 0 for compressed format
         mRecordFormat.mBytesPerFrame   = 0; // 0 for compressed format
